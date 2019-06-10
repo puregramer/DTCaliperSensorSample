@@ -1,0 +1,206 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <title>DT Caliper Sensor 2019 Sample</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <script src="./script/react.js"></script>
+    <script src="./script/react-dom.js"></script>
+    <script src="./script/babel.js"></script>
+    <script src="./script/DTCaliperSensor2019.js"></script>
+
+    <style>
+        #sampleQuiz .quizContainer {
+            position: absolute;
+        }
+
+        #sampleQuiz .quizAnswerBox {
+            margin: 10px;
+        }
+
+        #sampleQuiz .checkQuiz {
+            margin: 5px;
+        }
+
+        #sampleQuiz .resetQuiz {
+            margin: 5px;
+        }
+
+        #sampleQuiz .caliperStateLog {
+            font-weight: 900;
+        }
+
+        #sampleQuiz .caliperCurrentAnswer {
+            font-weight: 900;
+            margin-bottom: 20px;
+        }
+
+    </style>
+
+
+</head>
+
+<body>
+<div id="sampleQuiz"></div>
+</body>
+
+<script type="text/babel">
+
+    'use strict';
+
+    class SampleQuiz extends React.Component {
+        constructor(props) {
+            super(props);
+
+            this.isCorrectAnswer = null;
+            this.quizSubmitted = false;
+            this.selectedAnswer = null;
+            this.correctAnswer = 0;
+
+            this.DTCaliperSensorInstance = window.DTCaliperSensor2019({
+                sensorServerURL: window.location.origin + window.location.pathname.replace('index.html', 'response.json'),
+                baseIRI: 'http://tovsoft.com',
+                sessionURI: 'https://imsglobal.org/DTCaliperSensor/session-001',
+                sessionName: 'DTCaliperSession-001',
+                courseIRI: 'http://tovsoft.com/courseName/2019/',
+                courseNumber: 'test01',
+                courseName: 'sample course',
+                courseDescription: 'This is test course for DTCaliper',
+                academicSession: 'DTCaliper-2019',
+                sensorURI: 'http://tovsoft.com/sensors/1',
+                Authorization: 'testAuthorization',
+                clientURI: '/clients/1',
+                userURI: 'https://www.userSide.edu/user/mrLee',
+                syllabusURI: 'http://tovsoft.com/courseName/2019/syllabus',
+                syllabusName: 'Syllabus',
+                edAppURI: 'https://www.userSide.edu/DTCaliperSample',
+                edAppName: 'DTCaliper Sample',
+                homePageURI: 'http://tovsoft.com/saltgamer',
+                homePageName: 'saltgamerCourseHomepage',
+                membershipURI: 'http://tovsoft.com/courseName/2019/member/1',
+                membershipDescription: 'member entry',
+                assessmentURI: 'http://tovsoft.com/courseName/2019/assessment1',
+                assessmentName: 'test Assessment',
+                maxAttempts: 2,
+                maxSubmits: 2,
+                maxScore: 3,
+                quizPageURI: 'http://tovsoft.com/sampleCourseQuiz',
+                quizPageName: 'sampleCourseQuiz',
+                attemptURI: 'https://www.userSide.edu/2019/course1/assessment1/attempt1',
+                resultURI: '/result/1',
+                totalScore: 1,
+                scoreComment: 'sample quiz result!'
+
+            });
+
+            console.log('[salt] DTCaliperSensorInstance: ', this.DTCaliperSensorInstance);
+
+
+            this.state = {
+                currentEventType: this.DTCaliperSensorInstance.currentEventType,
+                currentEvent: this.DTCaliperSensorInstance.currentEvent
+            };
+
+            this.submitQuizEvent = () => {
+
+                if (!this.selectedAnswer) {
+                    alert('[!] 정답을 선택해주세요!');
+                    return;
+                }
+
+                this.quizSubmitted = true;
+                this.DTCaliperSensorInstance.submitQuiz(() => {
+                    this.updateState();
+                });
+                setTimeout(() => {
+                    console.log('[salt] isCorrectAnswer: ', this.isCorrectAnswer);
+                    this.DTCaliperSensorInstance.gradeQuiz(this.isCorrectAnswer === 'true' ? 1 : 0, () => {
+                        this.updateState();
+                    });
+                }, 1000);
+            };
+
+            this.inputEvent = (e) => {
+                this.selectedAnswer = e.target.getAttribute('data-index');
+                this.isCorrectAnswer = e.target.getAttribute('data-isCorrect');
+            };
+
+            this.resetQuizEvent = () => {
+                this.quizSubmitted = false;
+                this.DTCaliperSensorInstance.currentEventType = null;
+                this.DTCaliperSensorInstance.currentEvent = {};
+                this.updateState();
+            };
+
+        }
+
+        componentDidMount() {
+            setTimeout(() => {
+                this.DTCaliperSensorInstance.navigateToQuiz(() => {
+                    this.updateState();
+                    setTimeout(() => {
+                        this.DTCaliperSensorInstance.startQuiz(() => {
+                            this.updateState();
+                        });
+                    }, 500)
+                });
+            }, 1000);
+        }
+
+        updateState () {
+            this.setState({
+                currentEventType: this.DTCaliperSensorInstance.currentEventType,
+                currentEvent: this.DTCaliperSensorInstance.currentEvent
+            });
+        }
+
+        render() {
+
+            const {
+                currentEventType,
+                currentEvent
+            } = this.state;
+
+            return (
+                <div className="quizContainer">
+                    <h1>sample Quiz</h1>
+                    <h3>> 다음 문제를 보고 보기를 선택하세요.</h3>
+                    <hr/>
+                    {['보기1', '보기2', '보기3', '보기4'].map((value, idx) =>
+                        <div className={`quizAnswerBox`}>
+                            <label>
+                                <input type="radio" name="quizRadio" className={'quizAnswer_' + idx} key={idx}
+                                       data-isCorrect={idx === this.correctAnswer} data-index={idx}
+                                       onClick={this.inputEvent}/>
+                                {value}
+                            </label>
+                        </div>
+                    )}
+                    <button className="checkQuiz" onClick={this.submitQuizEvent}>정답확인</button>
+                    <button className="resetQuiz" onClick={this.resetQuizEvent}>다시하기</button>
+                    <hr/>
+                    {this.quizSubmitted && <div className="caliperCurrentAnswer">선택한 보기는
+                        {parseInt(this.selectedAnswer, 10) === this.correctAnswer ? '정답입니다.' : '정답이 아닙니다!'}</div>}
+
+                    <div className="caliperStateLog">{`Caliper Current Event: ` + currentEventType}</div>
+                    <div className="caliperEventLog">{`Caliper Event json: ` + JSON.stringify(currentEvent)}</div>
+                </div>
+
+            )
+        }
+    }
+
+    ReactDOM.render(
+        <SampleQuiz/>,
+        document.querySelector('#sampleQuiz')
+    );
+
+</script>
+
+
+
+</html>
