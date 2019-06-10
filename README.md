@@ -8,7 +8,7 @@
 - caliperSensor-1.1.1.js
 
 ## demo
- - [데모버전 보기](https://puregramer.github.io/DT2018MyBookShelf/release)
+ - [데모버전 보기](https://puregramer.github.io/DTCaliperSensorSample/dist)
  
  ## notice
  - 해당 프로젝트는 IMS Global에서 제공하는 caliper analytics sensor를 표준에 맞게 
